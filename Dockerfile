@@ -10,32 +10,32 @@ RUN apt-get update && \
 
 WORKDIR /build
 
-# Clone the official AssaultCube repo
+# Clone AssaultCube source
 RUN git clone --depth=1 https://github.com/assaultcube/AC.git .
 
-# Build & install only the dedicated server (produces bin_unix/native_server)
+# Build & package the dedicated server
 WORKDIR /build/source/src
 RUN make clean && make server_install
 
 # ── STAGE 2: RUNTIME IMAGE ─────────────────────────────────────────────────
 FROM debian:bookworm-slim
 
-# Install runtime libraries only
+# Runtime dependencies only
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
       libsdl2-2.0-0 zlib1g libogg0 libvorbis0a libopenal1 libenet7 && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy built server binary, launcher, and default config\ nCOPY --from=builder /build/source/bin_unix /ac/bin_unix
-COPY --from=builder /build/server.sh /ac/server.sh
-COPY --from=builder /build/config /ac/config
+# Copy the packaged server directory from builder
+COPY --from=builder /build/source/package_linux /ac
+
+# Copy your entrypoint wrapper
 COPY entrypoint.sh /ac/entrypoint.sh
 
 WORKDIR /ac
-RUN chmod +x server.sh entrypoint.sh
+RUN chmod +x entrypoint.sh
 
-# Expose default UDP port
+# Expose UDP port for AssaultCube
 EXPOSE 28763/udp
 
-# Entry point uses our wrapper
 ENTRYPOINT ["/ac/entrypoint.sh"]
