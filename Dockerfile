@@ -26,11 +26,14 @@ RUN apt-get update && \
       libsdl2-2.0-0 zlib1g libogg0 libvorbis0a libopenal1 libenet7 && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy built server files: launcher, binary, config
-COPY --from=builder /build/source/package_linux /ac
+# Copy built server files from correct location (bin_unix and config)
+COPY --from=builder /build/source/bin_unix /ac/bin_unix
+COPY --from=builder /build/config /ac/config
+COPY --from=builder /build/server.sh /ac/server.sh
+COPY entrypoint.sh /ac/entrypoint.sh
 
 WORKDIR /ac
-RUN chmod +x server.sh
+RUN chmod +x server.sh entrypoint.sh
 
 # Expose default UDP port
 EXPOSE 28763/udp
