@@ -26,10 +26,14 @@ RUN apt-get update && \
       libsdl2-2.0-0 zlib1g libogg0 libvorbis0a libopenal1 libenet7 && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy built server binary and default config
+# Copy built server binary and example config
 COPY --from=builder /build/source/bin_unix /ac/bin_unix
-COPY --from=builder /build/source/config /ac/config
 COPY entrypoint.sh /ac/entrypoint.sh
+
+# Create a default config directory with placeholder maprot
+RUN mkdir -p /ac/config && \
+    echo "cover map1 dm2 dm4 dm6 dc9 insta2 dm7" > /ac/config/maprot.cfg && \
+    echo "-i 0\n-l 3\n-D 10" > /ac/config/servercmdline.txt
 
 WORKDIR /ac
 RUN chmod +x entrypoint.sh
