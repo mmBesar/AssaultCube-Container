@@ -14,7 +14,8 @@ WORKDIR /build
 RUN git clone --depth=1 https://github.com/assaultcube/AC.git .
 
 # Build & package the dedicated server
-WORKDIR /build/source/src
+# Run server_install from the 'source' folder to generate package_linux/
+WORKDIR /build/source
 RUN make clean && make server_install
 
 # ── STAGE 2: RUNTIME IMAGE ─────────────────────────────────────────────────
@@ -38,4 +39,5 @@ RUN chmod +x entrypoint.sh
 # Expose UDP port for AssaultCube
 EXPOSE 28763/udp
 
+# Launch via wrapper
 ENTRYPOINT ["/ac/entrypoint.sh"]
