@@ -16,9 +16,7 @@ ARGS=""
 # Extra options
 [ -n "$EXTRA_OPTS" ]    && ARGS="$ARGS $EXTRA_OPTS"
 
-# Always include servercmdline.txt if available
-if [ -f config/servercmdline.txt ]; then
-  ARGS="$ARGS -C config/servercmdline.txt"
-fi
+# Include servercmdline.txt if present
+[ -f config/servercmdline.txt ] && ARGS="$ARGS -C config/servercmdline.txt"
 
 exec ./bin_unix/native_server $ARGS
