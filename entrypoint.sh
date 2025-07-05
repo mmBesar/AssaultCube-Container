@@ -16,7 +16,7 @@ ARGS=""
 # Extra options
 [ -n "$EXTRA_OPTS" ]    && ARGS="$ARGS $EXTRA_OPTS"
 
-# If user mounted a custom servercmdline.txt, include it
+# Always include servercmdline.txt if available
 if [ -f config/servercmdline.txt ]; then
   ARGS="$ARGS -C config/servercmdline.txt"
 fi
