@@ -1,36 +1,41 @@
-# Use a lightweight Debian base image
-FROM debian:bookworm-slim
+# ── STAGE 1: build the AC server binary ─────────────────────────────────────
+FROM debian:bookworm-slim AS builder
 
-# Install dependencies
+# install build tools and libraries (incl. SDL2, ENet, OpenAL, etc.)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    build-essential \
-    git \
-    libsdl1.2-dev \
-    zlib1g-dev \
-    libogg-dev \
-    libvorbis-dev \
-    libopenal-dev \
-    libenet-dev \
-    curl \
-    ca-certificates && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+      build-essential git clang libsdl2-dev zlib1g-dev \
+      libogg-dev libvorbis-dev libopenal-dev libenet-dev curl ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
-# Set working directory
-WORKDIR /opt
+WORKDIR /build
 
-# Clone AssaultCube repo (unofficial mirror or original source if available)
-RUN git clone --depth=1 https://github.com/assaultcube/AC.git
+# grab the latest AssaultCube source
+RUN git clone --depth=1 https://github.com/assaultcube/AC.git .
 
-# Build server
-WORKDIR /opt/AC/source/src
-RUN make server
+# enter the C‑side src folder and invoke the dedicated‑server build+install
+WORKDIR /build/source/src
+# ← this target builds libenet, compiles ac_server, then installs it to ../../bin_unix/$(PLATFORM_PREFIX)_server :contentReference[oaicite:1]{index=1}
+RUN make server_install
 
-# Set working directory to game root
-WORKDIR /opt/AC
+# ── STAGE 2: package only the server into a minimal image ───────────────────
+FROM debian:bookworm-slim
 
-# Expose default server port (UDP)
+# runtime libs only
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      libsdl2-2.0-0 zlib1g libogg0 libvorbis0a libopenal1 libenet7 && \
+    rm -rf /var/lib/apt/lists/*
+
+# copy the built server folder into /ac
+COPY --from=builder /build/source/bin_unix /ac
+
+# drop in our entrypoint helper
+WORKDIR /ac
+COPY entrypoint.sh /ac/entrypoint.sh
+RUN chmod +x entrypoint.sh
+
+# default port (UDP)
 EXPOSE 28763/udp
 
-# Default command to run the AssaultCube server
-CMD ["./server.sh", "-n"]
+ENTRYPOINT ["./entrypoint.sh"]
