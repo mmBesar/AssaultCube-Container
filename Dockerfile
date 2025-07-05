@@ -13,9 +13,9 @@ WORKDIR /build
 # Clone the official AssaultCube repo
 RUN git clone --depth=1 https://github.com/assaultcube/AC.git .
 
-# Build & install only the dedicated server
+# Build the dedicated server binary
 WORKDIR /build/source/src
-RUN make clean && make server_install
+RUN make clean && make server
 
 # ── STAGE 2: RUNTIME IMAGE ─────────────────────────────────────────────────
 FROM debian:bookworm-slim
@@ -26,14 +26,13 @@ RUN apt-get update && \
       libsdl2-2.0-0 zlib1g libogg0 libvorbis0a libopenal1 libenet7 && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy built server files from correct location (bin_unix and config)
+# Copy built server binary and default config
 COPY --from=builder /build/source/bin_unix /ac/bin_unix
-COPY --from=builder /build/config /ac/config
-COPY --from=builder /build/server.sh /ac/server.sh
+COPY --from=builder /build/source/config /ac/config
 COPY entrypoint.sh /ac/entrypoint.sh
 
 WORKDIR /ac
-RUN chmod +x server.sh entrypoint.sh
+RUN chmod +x entrypoint.sh
 
 # Expose default UDP port
 EXPOSE 28763/udp
