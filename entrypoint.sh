@@ -21,4 +21,4 @@ if [ -f config/servercmdline.txt ]; then
   ARGS="$ARGS -C config/servercmdline.txt"
 fi
 
-exec ./server.sh $ARGS
+exec ./bin_unix/native_server $ARGS
