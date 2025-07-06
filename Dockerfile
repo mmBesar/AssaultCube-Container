@@ -8,11 +8,16 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Install build dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
+    g++ \
+    clang \
     wget \
     zlib1g-dev \
     libcurl4-openssl-dev \
     git \
     ca-certificates \
+    autotools-dev \
+    automake \
+    libtool \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -23,7 +28,7 @@ RUN git clone --depth 1 https://github.com/assaultcube/AC.git assaultcube
 
 # Build the server binary
 WORKDIR /build/assaultcube/source/src
-RUN make server
+RUN make server CXX=clang++
 
 # Runtime stage
 FROM ubuntu:22.04
