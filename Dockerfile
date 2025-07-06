@@ -90,6 +90,13 @@ ENV AC_VOTETIMEOUT="60"
 ENV AC_DEMOS="1"
 ENV AC_DEMOTIME="15"
 ENV AC_VERBOSE="0"
+ENV AC_LANONLY="0"
+ENV AC_UPNP="1"
+ENV AC_BOTS="0"
+ENV AC_MINREMAIN="4"
+ENV AC_MAXBOTS="4"
+ENV AC_BOTBALANCE="1"
+ENV AC_BOTSKILL="4"
 
 # Create startup script
 RUN cat > /opt/assaultcube/start_server.sh << 'EOF'
@@ -109,14 +116,16 @@ cat > /opt/assaultcube/config/servercmdline.txt << EOCFG
 -c ${AC_MAXCLIENTS}
 -P ${AC_MAXPING}
 
-// Game settings
--m ${AC_GAMEMODE}
--t ${AC_GAMETIME}
+// Game settings - FIXED: Use -g for game mode and -m for game time
+-g ${AC_GAMEMODE}
+-m ${AC_GAMETIME}
 -r ${AC_MAPROT}
 -i ${AC_INTERMISSION}
 
 // Server behavior
 $([ "$AC_MASTERSERVER" = "1" ] && echo "-M" || echo "// Master server registration disabled")
+$([ "$AC_LANONLY" = "1" ] && echo "-l" || echo "// LAN only mode disabled")
+$([ "$AC_UPNP" = "1" ] && echo "-U" || echo "// UPnP disabled")
 $([ "$AC_AUTOTEAM" = "1" ] && echo "-A" || echo "// Auto-team disabled")
 $([ "$AC_TEAMKILLPUNISH" = "1" ] && echo "-K" || echo "// Team kill punishment disabled")
 $([ "$AC_CALLVOTE" = "1" ] && echo "-V" || echo "// Call vote disabled")
@@ -127,6 +136,12 @@ $([ "$AC_AUTOSENDMAP" = "1" ] && echo "-F" || echo "// Auto send map disabled")
 $([ "$AC_DEMOS" = "1" ] && echo "-W" || echo "// Demos disabled")
 $([ "$AC_SERVERLOG" = "1" ] && echo "-L" || echo "// Server logging disabled")
 $([ "$AC_VERBOSE" = "1" ] && echo "-v" || echo "// Verbose logging disabled")
+
+// Bot settings
+$([ "$AC_BOTS" = "1" ] && echo "-b ${AC_MINREMAIN}" || echo "// Bots disabled")
+$([ "$AC_BOTS" = "1" ] && echo "-e ${AC_MAXBOTS}" || echo "// Max bots not set")
+$([ "$AC_BOTS" = "1" ] && [ "$AC_BOTBALANCE" = "1" ] && echo "-s" || echo "// Bot balance disabled")
+$([ "$AC_BOTS" = "1" ] && echo "-k ${AC_BOTSKILL}" || echo "// Bot skill not set")
 
 // Passwords
 $([ -n "$AC_SERVERPASSWORD" ] && echo "-p \"$AC_SERVERPASSWORD\"" || echo "// No server password set")
@@ -155,6 +170,17 @@ echo "Server name: ${AC_SERVERNAME}"
 echo "Server port: ${AC_SERVERPORT}"
 echo "Max clients: ${AC_MAXCLIENTS}"
 echo "Admin password: ${AC_ADMINPASSWORD}"
+echo "Game mode: ${AC_GAMEMODE}"
+echo "Game time: ${AC_GAMETIME} minutes"
+echo "LAN only: ${AC_LANONLY}"
+echo "UPnP: ${AC_UPNP}"
+echo "Bots enabled: ${AC_BOTS}"
+if [ "$AC_BOTS" = "1" ]; then
+    echo "  - Min remain: ${AC_MINREMAIN}"
+    echo "  - Max bots: ${AC_MAXBOTS}"
+    echo "  - Bot balance: ${AC_BOTBALANCE}"
+    echo "  - Bot skill: ${AC_BOTSKILL}"
+fi
 echo "Configuration written to config/servercmdline.txt"
 echo ""
 
